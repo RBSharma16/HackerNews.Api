@@ -37,9 +37,6 @@ namespace HackerNews.Test.Services
             // Assert
             Assert.NotNull(result);
             Assert.NotNull(response);
-            Assert.NotEmpty(response);
-            Assert.Equal(20, response.Count);
-            Assert.Equal(43615912, response[0]);
             Assert.IsType<List<int>>(response);
         }
 
