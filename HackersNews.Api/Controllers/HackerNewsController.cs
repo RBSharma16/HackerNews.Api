@@ -13,6 +13,11 @@ namespace HackersNews.Api.Controllers
         private readonly IHackersNewsApiClient _hackersNewsApiClient;
         private readonly ILogger<HackerNewsController> _logger;
 
+        /// <summary>
+        /// Controller constructor.
+        /// </summary>
+        /// <param name="hackersNewsApiClient"></param>
+        /// <param name="logger"></param>
         public HackerNewsController(IHackersNewsApiClient hackersNewsApiClient, ILogger<HackerNewsController> logger) 
         {
             _hackersNewsApiClient = hackersNewsApiClient;

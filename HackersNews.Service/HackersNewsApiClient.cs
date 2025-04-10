@@ -119,7 +119,7 @@ namespace HackersNews.Service
                     var ids = await GetTopStoriesAsync();
                     ids.ForEach(async (id) =>
                     {
-                        if (storyItems.Count < 200)
+                        if (storyItems.Count <= 200)
                         {
                             var item = await GetStoryItemAsync(id);
                             if (item != null && !string.IsNullOrEmpty(item.url))
@@ -128,14 +128,11 @@ namespace HackersNews.Service
                     });
                     var memoryCacheEntryOptions = new MemoryCacheEntryOptions
                     {
-                        AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1)
+                        AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
                     };
                     _memoryCache.Set(_cacheName, storyItems, memoryCacheEntryOptions);
                 }
-                if (storyItems != null)
-                    return storyItems;
-                else
-                    return new List<StoryItems>();
+                return storyItems ?? new List<StoryItems>();
             }
             catch (Exception ex)
             {
