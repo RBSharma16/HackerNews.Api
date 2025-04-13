@@ -28,7 +28,7 @@ namespace HackerNews.Test.Services
                 .MockHttpMessageHandler
                 .Protected()
                 .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
-                .ReturnsAsync(_clientFixture.SampleResponseOk);
+                .ReturnsAsync(_clientFixture.SampleResponseOk).Verifiable();
 
             // Act
             var result = await _hackersNewsApiClient.GetTopStoriesAsync();
@@ -48,7 +48,7 @@ namespace HackerNews.Test.Services
                 .MockHttpMessageHandler
                 .Protected()
                 .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
-                .ReturnsAsync(_clientFixture.SampleResponseNoContent);
+                .ReturnsAsync(_clientFixture.SampleResponseNoContent).Verifiable();
 
             // Act
             var result = await _hackersNewsApiClient.GetTopStoriesAsync();
@@ -66,7 +66,7 @@ namespace HackerNews.Test.Services
                 .MockHttpMessageHandler
                 .Protected()
                 .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
-                .Throws<Exception>();
+                .Throws<Exception>().Verifiable();
 
             // Act
             var result = await _hackersNewsApiClient.GetTopStoriesAsync();
@@ -84,7 +84,7 @@ namespace HackerNews.Test.Services
                 .MockHttpMessageHandler
                 .Protected()
                 .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
-                .ReturnsAsync(_clientFixture.SampleItemResponseOk);
+                .ReturnsAsync(_clientFixture.SampleItemResponseOk).Verifiable();
 
             // Act
             var result = await _hackersNewsApiClient.GetStoryItemAsync(_clientFixture.SampleNewsId);
@@ -104,7 +104,7 @@ namespace HackerNews.Test.Services
                 .MockHttpMessageHandler
                 .Protected()
                 .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
-                .ReturnsAsync(_clientFixture.SampleResponseNoContent);
+                .ReturnsAsync(_clientFixture.SampleResponseNoContent).Verifiable();
 
             // Act
             var result = await _hackersNewsApiClient.GetStoryItemAsync(_clientFixture.SampleNewsId);
@@ -122,7 +122,7 @@ namespace HackerNews.Test.Services
                 .MockHttpMessageHandler
                 .Protected()
                 .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
-                .Throws<Exception>();
+                .Throws<Exception>().Verifiable();
 
             // Act
             var result = await _hackersNewsApiClient.GetStoryItemAsync(_clientFixture.SampleNewsId);
@@ -136,8 +136,8 @@ namespace HackerNews.Test.Services
         public async Task HackersNewsApiClient_GetStoryItemsAsync_WhenSuccess()
         {
             // Arrange
-            object obj = _clientFixture.SampleStoryItems;
-            _clientFixture.MockMemoryCache.Setup(mc => mc.TryGetValue(It.IsAny<object>(), out obj));
+            object? obj = _clientFixture.SampleStoryItems;
+            _clientFixture.MockMemoryCache.Setup(mc => mc.TryGetValue(It.IsAny<object>(), out obj)).Returns(true);
 
             // Act
             var result = await _hackersNewsApiClient.GetStoryItemsAsync();
@@ -150,10 +150,76 @@ namespace HackerNews.Test.Services
         }
 
         [Fact]
+        public async Task HackersNewsApiClient_GetStoryItemsAsync_NoCachedData_FetchesFromApi()
+        {
+            // Arrange
+            _clientFixture.MockMemoryCache.Setup(mc => mc.TryGetValue(It.IsAny<string>(), out It.Ref<object>.IsAny!)).Returns(false);
+
+            _clientFixture
+                .MockHttpMessageHandler
+                .Protected()
+                .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+                .ReturnsAsync(_clientFixture.SampleResponseOk).Verifiable();
+
+            _clientFixture.MockHttpMessageHandler
+            .Protected()
+            .Setup<Task<HttpResponseMessage>>(
+                "SendAsync",
+                ItExpr.Is<HttpRequestMessage>(req => req.RequestUri.AbsolutePath.Contains("item")),
+                ItExpr.IsAny<CancellationToken>()
+            )
+            .ReturnsAsync(_clientFixture.SampleItemResponseOk)
+            .Verifiable();
+
+            object? obj = _clientFixture.SampleStoryItems;
+            _clientFixture.MockMemoryCache.Setup(mc => mc.TryGetValue(It.IsAny<object>(), out obj)).Returns(true);
+
+            // Act
+            var result = await _hackersNewsApiClient.GetStoryItemsAsync();
+
+            // Assert
+            Assert.NotEmpty(result);
+            Assert.Equal(_clientFixture.SampleStoryItems?.FirstOrDefault()?.url, result[0].url);
+        }
+
+        [Fact]
+        public async Task HackersNewsApiClient_GetStoryItemsAsync_NoCachedData_FetchesOnly200Items()
+        {
+            // Arrange
+            _clientFixture.MockMemoryCache.Setup(mc => mc.TryGetValue(It.IsAny<string>(), out It.Ref<object>.IsAny)).Returns(false);
+            _clientFixture.MockHttpMessageHandler
+                .Protected()
+                .Setup<Task<HttpResponseMessage>>(
+                    "SendAsync",
+                    ItExpr.IsAny<HttpRequestMessage>(),
+                    ItExpr.IsAny<CancellationToken>()
+                )
+                .ReturnsAsync(_clientFixture.SampleResponseOk)
+                .Verifiable();
+
+            _clientFixture.MockHttpMessageHandler
+                .Protected()
+                .Setup<Task<HttpResponseMessage>>(
+                    "SendAsync",
+                    ItExpr.Is<HttpRequestMessage>(req => req.RequestUri.AbsolutePath.Contains("item")),
+                    ItExpr.IsAny<CancellationToken>()
+                )
+                .ReturnsAsync(_clientFixture.SampleItemResponseOk)
+                .Verifiable();
+
+            // Act
+            var result = await _hackersNewsApiClient.GetStoryItemsAsync();
+
+            // Assert
+            Assert.True(result.Count <= 200);
+        }
+
+
+        [Fact]
         public async Task HackersNewsApiClient_GetStoryItemsAsync_WhenFailed()
         {
             // Arrange
-            object obj;
+            object? obj;
             _clientFixture.MockMemoryCache.Setup(mc => mc.TryGetValue(It.IsAny<object>(), out obj));
 
             // Act
@@ -170,7 +236,7 @@ namespace HackerNews.Test.Services
         public async Task HackersNewsApiClient_GetStoryItemsAsync_WhenException()
         {
             // Arrange
-            object obj;
+            object? obj;
             _clientFixture.MockMemoryCache.Setup(mc => mc.TryGetValue(It.IsAny<object>(), out obj));
 
             // Act

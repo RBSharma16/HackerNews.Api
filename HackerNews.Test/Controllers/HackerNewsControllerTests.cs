@@ -1,11 +1,8 @@
 ﻿using HackersNews.Api.Controllers;
 using HackersNews.Service;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Moq;
-using Newtonsoft.Json;
 using System.Net;
-using System.Text.Json.Serialization;
 
 namespace HackerNews.Test.Controllers
 {
@@ -62,13 +59,13 @@ namespace HackerNews.Test.Controllers
         public async Task HackerNewsController_GetStoryItems_Success_When_NoItemsAfterFilter()
         {
             // Arrange
-            _mockHackersNewsApiClient.Setup(hn => hn.GetStoryItemsAsync()).ReturnsAsync(_hackerNewsControllerFixture.SampleStoryItems?.Take(1).ToList());
+            _mockHackersNewsApiClient.Setup(hn => hn.GetStoryItemsAsync()).ReturnsAsync(_hackerNewsControllerFixture.SampleStoryItems?.Take(1).ToList() ?? new List<StoryItems>());
 
             // Act
             var result = await _controller.GetStoryItems(
                 _hackerNewsControllerFixture.SamplePageNumber,
                 _hackerNewsControllerFixture.SamplePageSize,
-                _hackerNewsControllerFixture.SampleStoryItems?.Where(x => x.id == 43615912).FirstOrDefault()?.title
+                _hackerNewsControllerFixture.SampleStoryItems?.Where(x => x.id == 43615912)?.FirstOrDefault()?.title
                 ) as OkObjectResult;
 
             // Assert

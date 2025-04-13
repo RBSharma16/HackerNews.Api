@@ -17,6 +17,7 @@ namespace HackersNews.Service
         private readonly string _topStoriesPath;
         private readonly string _storyItemsPath;
         private readonly string _cacheName;
+        private readonly int _cacheExpiryMinutes;
 
         /// <summary>
         /// Constructor of hacker news API client.
@@ -32,6 +33,7 @@ namespace HackersNews.Service
             _topStoriesPath = configuration.GetValue<string>("AppSettings:HackerNews:TopStoriesPath") ?? string.Empty;
             _storyItemsPath = configuration.GetValue<string>("AppSettings:HackerNews:StoryItemsPath") ?? string.Empty;
             _cacheName = configuration.GetValue<string>("AppSettings:CacheName") ?? string.Empty;
+            _cacheExpiryMinutes = configuration.GetValue<int>("AppSettings:CacheExpiryMinuutes");
         }
 
         /// <summary>
@@ -115,20 +117,20 @@ namespace HackersNews.Service
             {
                 if (!_memoryCache.TryGetValue(_cacheName, out List<StoryItems>? storyItems))
                 {
-                    storyItems = new List<StoryItems>();
                     var ids = await GetTopStoriesAsync();
-                    ids.ForEach(async (id) =>
+
+                    var tasks = ids.Select(async id =>
                     {
-                        if (storyItems.Count <= 200)
-                        {
-                            var item = await GetStoryItemAsync(id);
-                            if (item != null && !string.IsNullOrEmpty(item.url))
-                                storyItems.Add(item);
-                        }
+                        var item = await GetStoryItemAsync(id);
+                        return item;
                     });
+
+                    var items = await Task.WhenAll(tasks);
+                    storyItems = items.Where(item => item != null && !string.IsNullOrEmpty(item.url)).Take(200).ToList();
+
                     var memoryCacheEntryOptions = new MemoryCacheEntryOptions
                     {
-                        AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
+                        AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(_cacheExpiryMinutes)
                     };
                     _memoryCache.Set(_cacheName, storyItems, memoryCacheEntryOptions);
                 }

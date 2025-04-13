@@ -39,7 +39,7 @@ namespace HackersNews.Api.Controllers
                 var items = await _hackersNewsApiClient.GetStoryItemsAsync();
                 if (items != null && items.Count > 0)
                 {
-                    items = items.Where(x => string.IsNullOrEmpty(title) || x.title.ToLower().Contains(title.ToLower())).ToList();
+                    items = items.Where(x => string.IsNullOrEmpty(title) || (x.title ?? string.Empty).Contains(title, StringComparison.CurrentCultureIgnoreCase)).ToList();
                     var total = items.Count;
                     if (items.Any() && items.Count >= (pageNumber*pageSize))
                         items = items.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();

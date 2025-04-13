@@ -3,10 +3,8 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Moq.Protected;
 using Newtonsoft.Json;
 using System.Net;
-using System.Runtime;
 
 namespace HackerNews.Test.Services
 {
@@ -41,9 +39,26 @@ namespace HackerNews.Test.Services
             MockHttpClientFactory = new Mock<IHttpClientFactory>();
             MockConfiguration = new Mock<IConfiguration>();
             MockMemoryCache = new Mock<IMemoryCache>();
-            var mockSection = new Mock<IConfigurationSection>();
+
+            var mockSection = new Mock<IConfigurationSection>();            
             mockSection.Setup(x => x.Value).Returns("https://TestValue/");
-            MockConfiguration.Setup(fu => fu.GetSection(It.IsAny<string>())).Returns(mockSection.Object);
+            MockConfiguration.Setup(fu => fu.GetSection("AppSettings:HackerNews:BaseUrl")).Returns(mockSection.Object);
+
+            mockSection = new Mock<IConfigurationSection>();
+            mockSection.Setup(x => x.Value).Returns("topstories");
+            MockConfiguration.Setup(c => c.GetSection("AppSettings:HackerNews:TopStoriesPath")).Returns(mockSection.Object); 
+            
+            mockSection = new Mock<IConfigurationSection>();
+            mockSection.Setup(x => x.Value).Returns("item/{itemId}");
+            MockConfiguration.Setup(c => c.GetSection("AppSettings:HackerNews:StoryItemsPath")).Returns(mockSection.Object);
+
+            mockSection = new Mock<IConfigurationSection>();
+            mockSection.Setup(x => x.Value).Returns("HackerNewsData");
+            MockConfiguration.Setup(c => c.GetSection("AppSettings:CacheName")).Returns(mockSection.Object);
+
+            mockSection = new Mock<IConfigurationSection>();
+            mockSection.Setup(x => x.Value).Returns("1");
+            MockConfiguration.Setup(c => c.GetSection("AppSettings:CacheExpiryMinuutes")).Returns(mockSection.Object);
 
             MockHttpMessageHandler = new Mock<HttpMessageHandler>();
             var httpClient = new HttpClient(MockHttpMessageHandler.Object);
