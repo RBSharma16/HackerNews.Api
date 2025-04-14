@@ -6,6 +6,9 @@ using Newtonsoft.Json;
 
 namespace HackerNews.Test.Controllers
 {
+    /// <summary>
+    /// Hacker news controller fixture
+    /// </summary>
     public class HackerNewsControllerFixture
     {
         public readonly int SamplePageNumber = 1;

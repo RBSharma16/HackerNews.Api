@@ -6,6 +6,9 @@ using System.Net;
 
 namespace HackerNews.Test.Controllers
 {
+    /// <summary>
+    /// Hacker news controller tests
+    /// </summary>
     public class HackerNewsControllerTests : IClassFixture<HackerNewsControllerFixture>
     {
         private readonly Mock<IHackersNewsApiClient> _mockHackersNewsApiClient;

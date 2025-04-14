@@ -8,6 +8,9 @@ using System.Net;
 
 namespace HackerNews.Test.Services
 {
+    /// <summary>
+    /// Hackers news Api client fixture
+    /// </summary>
     public class HackersNewsApiClientFixture
     {
         public readonly int SampleNewsId = 43615912;

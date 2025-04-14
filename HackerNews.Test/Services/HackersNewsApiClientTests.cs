@@ -5,6 +5,9 @@ using Newtonsoft.Json;
 
 namespace HackerNews.Test.Services
 {
+    /// <summary>
+    /// Hackers news Api client tests
+    /// </summary>
     public class HackersNewsApiClientTests : IClassFixture<HackersNewsApiClientFixture>
     {
         private readonly HackersNewsApiClientFixture _clientFixture;
