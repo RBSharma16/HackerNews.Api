@@ -66,7 +66,7 @@ namespace HackersNews.Service
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex.Message);
+                _logger.LogError(ex, ex.Message);
                 return ids;
             }
         }
@@ -102,7 +102,7 @@ namespace HackersNews.Service
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex.Message);
+                _logger.LogError(ex, ex.Message);
                 return storyItems;
             }
         }
@@ -138,7 +138,7 @@ namespace HackersNews.Service
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex.Message);
+                _logger.LogError(ex, ex.Message);
                 return new List<StoryItems>();
             }
         }
